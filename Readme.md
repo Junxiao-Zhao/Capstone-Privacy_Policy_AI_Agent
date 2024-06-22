@@ -30,11 +30,3 @@ In this project, we’d like to develop a chatbot that could help developers gen
     - Select the most suitable template based on the requirement;
     - Providing with the template and examples, let the LLM to generate a customized privacy policy;
 2. Presentation.
-
-## What we need
-- **OpenAI API Key** or **Other platform API Key** (like Humanloop or Poe) to access GPT from the backend;
-- **ChatGPT Enterprise** to access GPT from the frontend;
-- At least 2 **servers with [80 GB GPU memory + 2T disk]** to deploy Open Source LLMs like Llama3 70b - Instruct;
-- **GitHub Enterprise** or **GitLab** as the Git repository to store codes;
-- Licenses for **Pycharm Professional** as the IDE for development;
-- **GitHub Copilot Enterprise** as a development tool.
