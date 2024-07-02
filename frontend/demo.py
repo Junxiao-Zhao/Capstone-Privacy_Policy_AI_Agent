@@ -281,14 +281,16 @@ def generate_privacy_policy(user_data, data_type_desc, collection_method_desc, u
     if use_cookies:
         cookie = f'\
         <h3>Cookies and Tracking Technologies</h3>\
-        <p>We use cookies and similar tracking technologies to track the activity on our service and hold certain information. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.</p>\
+        <p>We use cookies and similar tracking technologies to track the activity on our service and hold certain information.</p>\
+        <p>You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent.</p>\
         '
     
     retention = ''
     if retention_period:
         retention = f'\
         <h3>Data Retention</h3>\
-        <p>We will retain your personal data only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use your data to the extent necessary to comply with our legal obligations, resolve disputes, and enforce our policies.</p>\
+        <p>We will retain your personal data only for as long as is necessary for the purposes set out in this Privacy Policy. </p>\
+        <p>We will retain and use your data to the extent necessary to comply with our legal obligations, resolve disputes, and enforce our policies.</p>\
         '
 
     template = f"""
@@ -301,16 +303,7 @@ def generate_privacy_policy(user_data, data_type_desc, collection_method_desc, u
     <p><strong>Company Name</strong>: <span style="color:{color};">{user_data.get('company_name', 'Your Company')}</span></p>
     <p><strong>Address</strong>: <span style="color:{color};">{user_data.get('address', 'Your Address')}</span></p>
     <p><strong>Contact Email</strong>: <span style="color:{color};">{user_data.get('contact_email', 'your.email@example.com')}</span></p>
-    {data}
-    {collection}
-    {usage}
-    {sharing}
-    {cookie}
-    {protection}
-    {retention}
-    {legal}
-    {user}
-    {transfer}
+    {data+collection+usage+sharing+cookie+protection+retention+legal+user+transfer}
     <h3>Dispute Resolution</h3>
     <p>If you have any complaints or concerns about our Privacy Policy or practices, please contact us at <span style="color:{color};">{user_data.get('contact_email', 'your.email@example.com')}</span>. We will work with you to resolve any issues.</p>
 
