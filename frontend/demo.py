@@ -31,8 +31,6 @@ def add_logo(version, number):
 
 def main():
     # Initialize session state
-    st.markdown('test')
-
     if 'page' not in st.session_state:
         st.session_state['page'] = 0
     if 'form_data' not in st.session_state:
@@ -182,11 +180,32 @@ def display_page(page):
                     st.session_state['form_data'], 
                 ), unsafe_allow_html=True)
             if not (st.session_state['form_data']['company_name'] and st.session_state['form_data']['address'] and st.session_state['form_data']['contact_email']):
-                st.warning(" You haven't finnish Company Info Part" )
+                st.warning(" You haven't finish Company Info Part" )
     else:
         with st.sidebar:
             st.warning("Company Info Part left to be finish" )
 
+    if st.session_state['form_data']['data_types']:
+        with st.sidebar.expander("Information We Collect"):
+            st.markdown(pg.generate_part(
+                    st.session_state['form_data'], 
+                    'data_types',
+                    DATA_TYPE_DESCRIPTIONS
+                ), unsafe_allow_html=True)
+    else:
+        with st.sidebar:
+            st.warning("Information Collect Part left to be finish" )
+
+    # adding more infor
+
+    if st.session_state['form_data']['use_cookies']:
+        with st.sidebar.expander("Cookies and Tracking Technologies"):
+            st.markdown(pg.generate_part(
+                    st.session_state['form_data'], 
+                    'use_cookies',
+                ), unsafe_allow_html=True)
+    
+    # adding more infor
 
     
     if st.session_state['form_data']['company_name'] or st.session_state['form_data']['address'] or st.session_state['form_data']['contact_email']:
@@ -195,13 +214,9 @@ def display_page(page):
                     st.session_state['form_data'], 
                 ), unsafe_allow_html=True)
             if not (st.session_state['form_data']['company_name'] and st.session_state['form_data']['address'] and st.session_state['form_data']['contact_email']):
-                st.warning(" You haven't finnish Company Info Part" )
+                st.warning(" You haven't finish Company Info Part" )
     with st.sidebar:
         st.warning("Contact Us Part left to be finish" )
-
-
-
-
 
     if DISPLAY_TEMPLATE:
         # Dynamically generate and display privacy policy template

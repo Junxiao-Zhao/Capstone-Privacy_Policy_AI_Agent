@@ -10,6 +10,8 @@ if VERSION[-1] == 'a':
     SKIP_VALIDATION = True
     DISPLAY_TEMPLATE = True
 
+LETTER_COLOR = 'red'
+
 # Options for selection
 DATA_TYPES = [
     'Personal Information', 
