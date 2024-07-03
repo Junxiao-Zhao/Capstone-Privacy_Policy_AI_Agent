@@ -1,103 +1,60 @@
 import streamlit as st
 import pandas as pd
 
-# Constants for testing
-SKIP_VALIDATION = True
+from constants import (
+    VERSION,
+    SKIP_VALIDATION,
+    DISPLAY_TEMPLATE,
+    DATA_TYPES,
+    USAGE_PURPOSES,
+    SHARING_PARTNERS,
+    PROTECTION_MEASURES,
+    USER_RIGHTS,
+    TRANSFER_MEASURES,
+    LEGAL_BASIS,
+    DATA_TYPE_DESCRIPTIONS,
+    USAGE_PURPOSE_DESCRIPTIONS,
+    SHARING_PARTNER_DESCRIPTIONS,
+    PROTECTION_MEASURE_DESCRIPTIONS,
+    USER_RIGHT_DESCRIPTIONS,
+    TRANSFER_MEASURE_DESCRIPTIONS,
+    LEGAL_BASIS_DESCRIPTIONS,
+    COLLECTION_METHODS_DESCRIPTIONS
+)
 
-# Options for selection
-DATA_TYPES = [
-    'Personal Information', 
-    'Account Information', 
-    'Content Data',
-    'Usage Data', 
-    'Device Information', 
-    'Location Data', 
-    'Payment Information',
-    'Transaction Data', 
-    'Financial Information',
-    'Biometric Data',
-    'Health Information',
-    'Communication Data',
-    'Behavioral Data',
-    'Preference Data',
-    'Employment Information',
-    'Educational Information'
-]
+import policy_generator as pg
 
-USAGE_PURPOSES = [
-    'Providing Services', 
-    'Customer Support', 
-    'Improving Services',
-    'Security and Fraud Prevention', 
-    'Legal Compliance', 
-    'Marketing',
-    'Personalization',
-    'Analytics and Research',
-    'Product Development',
-    'Communications',
-    'Advertising'
-]
-
-SHARING_PARTNERS = [
-    'Service Providers', 
-    'Business Partners', 
-    'Legal Authorities', 
-    'Advertising Partners',
-    'Other Users',
-    'Affiliates and Subsidiaries',
-    'Data Brokers',
-    'Government Agencies',
-    'Social Media Platforms'
-]
-
-PROTECTION_MEASURES = [
-    'Encryption', 
-    'Access Control', 
-    'Data Minimization', 
-    'Security Audits',
-    'Firewalls',
-    'Intrusion Detection Systems',
-    'Multi-factor Authentication',
-    'Regular Security Training',
-    'Data Anonymization',
-    'Secure Data Storage'
-]
-
-USER_RIGHTS = [
-    'Access Data', 
-    'Correct Data', 
-    'Delete Data', 
-    'Data Portability', 
-    'Opt-out',
-    'Restrict Processing', 
-    'Object to Processing',
-    'Withdraw Consent',
-    'Complain to Supervisory Authority'
-]
-
-TRANSFER_MEASURES = [
-    'Standard Contractual Clauses', 
-    'Privacy Shield',
-    'Binding Corporate Rules',
-    'Adequacy Decisions',
-    'Data Protection Agreements'
-]
-
-LEGAL_BASIS = [
-    'Consent', 
-    'Contract', 
-    'Legal Obligation', 
-    'Legitimate Interests',
-    'Vital Interests',
-    'Public Task'
-]
+def add_logo(version, number):
+    st.markdown(
+        f"{version+number}"
+    )
 
 def main():
     # Initialize session state
+    st.markdown('test')
+
     if 'page' not in st.session_state:
         st.session_state['page'] = 0
     if 'form_data' not in st.session_state:
         st.session_state['form_data'] = {}
+        st.session_state['form_data']['company_name'] = ''
+        st.session_state['form_data']['address'] = ''
+        st.session_state['form_data']['contact_email'] = ''
+        st.session_state['form_data']['data_types'] = []
+        st.session_state['form_data']['collection_methods'] = []
+        st.session_state['form_data']['use_cookies'] = []
+        st.session_state['form_data']['usage_purposes'] = []
+        st.session_state['form_data']['sharing_partners'] = []
+        st.session_state['form_data']['protection_measures'] = []
+        st.session_state['form_data']['retention_period'] = ''
+        st.session_state['form_data']['user_rights'] = []
+        st.session_state['form_data']['legal_basis'] = []
+        st.session_state['form_data']['collect_child_data'] = False
+        st.session_state['form_data']['child_protection_measures'] = []
+        st.session_state['form_data']['international_transfer'] = False
+        st.session_state['form_data']['transfer_measures'] = []
+        st.session_state['form_data']['dispute_resolution'] = ''
+        st.session_state['form_data']['user_additions'] = ''
 
     # Pages
     pages = [
@@ -148,7 +105,7 @@ def save_current_page_data(page):
     if page == 'Company Info':
         st.session_state['form_data']['company_name'] = st.session_state.get('company_name', '')
         st.session_state['form_data']['address'] = st.session_state.get('address', '')
-        st.session_state['form_data']['contact'] = st.session_state.get('contact', '')
+        st.session_state['form_data']['contact_email'] = st.session_state.get('contact_email', '')
     elif page == 'Data Collection':
         st.session_state['form_data']['data_types'] = st.session_state.get('data_types', [])
         st.session_state['form_data']['collection_methods'] = st.session_state.get('collection_methods', [])
@@ -164,6 +121,7 @@ def save_current_page_data(page):
         st.session_state['form_data']['retention_period'] = st.session_state.get('retention_period', '')
     elif page == 'User Rights':
         st.session_state['form_data']['user_rights'] = st.session_state.get('user_rights', [])
+        st.session_state['form_data']['legal_basis'] = st.session_state.get('legal_basis', [])
     elif page == 'Child Privacy':
         st.session_state['form_data']['collect_child_data'] = st.session_state.get('collect_child_data', False)
         if st.session_state['form_data']['collect_child_data']:
@@ -182,7 +140,7 @@ def display_page(page):
     if page == 'Company Info':
         st.session_state['company_name'] = st.text_input('Company Name', st.session_state['form_data'].get('company_name', ''))
         st.session_state['address'] = st.text_input('Address', st.session_state['form_data'].get('address', ''))
-        st.session_state['contact'] = st.text_input('Contact Email', st.session_state['form_data'].get('contact', ''))
+        st.session_state['contact_email'] = st.text_input('Contact Email', st.session_state['form_data'].get('contact_email', ''))
     elif page == 'Data Collection':
         st.session_state['data_types'] = st.multiselect('Types of Data Collected', DATA_TYPES, st.session_state['form_data'].get('data_types', []))
         st.session_state['collection_methods'] = st.multiselect('Data Collection Methods', ['Directly from you', 'Automatically', 'From third parties'], st.session_state['form_data'].get('collection_methods', []))
@@ -198,6 +156,7 @@ def display_page(page):
         st.session_state['retention_period'] = st.text_input('Data Retention Period', st.session_state['form_data'].get('retention_period', ''))
     elif page == 'User Rights':
         st.session_state['user_rights'] = st.multiselect('User Rights', USER_RIGHTS, st.session_state['form_data'].get('user_rights', []))
+        st.session_state['legal_basis'] = st.multiselect('Legal Basis for Processing', LEGAL_BASIS, st.session_state['form_data'].get('legal_basis', []))
     elif page == 'Child Privacy':
         st.session_state['collect_child_data'] = st.checkbox('Collect Data from Children?', st.session_state['form_data'].get('collect_child_data', False))
         if st.session_state['collect_child_data']:
@@ -214,11 +173,57 @@ def display_page(page):
         st.write('## Summary')
         st.json(st.session_state['form_data'])
 
+    with st.sidebar:
+        st.markdown(f"Version {VERSION}")
+    
+    if st.session_state['form_data']['company_name'] or st.session_state['form_data']['address'] or st.session_state['form_data']['contact_email']:
+        with st.sidebar.expander("Company Information"):
+            st.markdown(pg.generate_company_information(
+                    st.session_state['form_data'], 
+                ), unsafe_allow_html=True)
+            if not (st.session_state['form_data']['company_name'] and st.session_state['form_data']['address'] and st.session_state['form_data']['contact_email']):
+                st.warning(" You haven't finnish Company Info Part" )
+    else:
+        with st.sidebar:
+            st.warning("Company Info Part left to be finish" )
+
+
+    
+    if st.session_state['form_data']['company_name'] or st.session_state['form_data']['address'] or st.session_state['form_data']['contact_email']:
+        with st.sidebar.expander("Contact Us"):
+            st.markdown(pg.generate_contact_us(
+                    st.session_state['form_data'], 
+                ), unsafe_allow_html=True)
+            if not (st.session_state['form_data']['company_name'] and st.session_state['form_data']['address'] and st.session_state['form_data']['contact_email']):
+                st.warning(" You haven't finnish Company Info Part" )
+    with st.sidebar:
+        st.warning("Contact Us Part left to be finish" )
+
+
+
+
+
+    if DISPLAY_TEMPLATE:
+        # Dynamically generate and display privacy policy template
+        with st.sidebar.expander("Preview Privacy Policy Template"):
+            if st.session_state['form_data']:
+                st.markdown(pg.generate_privacy_policy(
+                    st.session_state['form_data'], 
+                    DATA_TYPE_DESCRIPTIONS, 
+                    COLLECTION_METHODS_DESCRIPTIONS,
+                    USAGE_PURPOSE_DESCRIPTIONS, 
+                    SHARING_PARTNER_DESCRIPTIONS, 
+                    PROTECTION_MEASURE_DESCRIPTIONS, 
+                    USER_RIGHT_DESCRIPTIONS, 
+                    TRANSFER_MEASURE_DESCRIPTIONS, 
+                    LEGAL_BASIS_DESCRIPTIONS
+                ), unsafe_allow_html=True)
+
 def validate_page(page_index):
     if SKIP_VALIDATION:
         return True
     required_fields = {
-        0: ['company_name', 'address', 'contact'],
+        0: ['company_name', 'address', 'contact_email'],
         1: ['data_types', 'collection_methods'],
         2: ['use_cookies'],
         3: ['usage_purposes'],
