@@ -29,3 +29,23 @@ SectionList = conlist(Section, min_length=12, max_length=12)
 
 class Syllabus(BaseModel):
     sections: SectionList = Field(..., title="List of Sections")
+
+
+class Judge(BaseModel):
+
+    name: SectionNames = Field(..., title="Section Name")
+
+    suggestions: str = Field(
+        ...,
+        title="Suggestions",
+        description="Suggestions for improvement.",
+    )
+
+
+class Judges(BaseModel):
+
+    judges: List[Judge] = Field(
+        ...,
+        title="Judges",
+        description="Judges for the sections.",
+    )

@@ -6,11 +6,14 @@ from llama_index.core.query_pipeline import QueryPipeline
 from llama_index.core.output_parsers import PydanticOutputParser
 from llama_index.readers.web import SimpleWebPageReader
 
-from .formats import Syllabus
+from .formats import Syllabus, Judges
 from .prompts import (
     ASK_SYLLABUS_TEMPLATE,
     FORMAT_SYLLABUS_TEMPLATE,
+    JUDGE_SECTION_TEMPLATE,
+    FORMAT_JUDGE_TEMPLATE,
 )
+from .law_model import HuggingFaceLLMModified
 
 
 def prepare_regulation_query_engine(
@@ -79,3 +82,35 @@ def prepare_regulation_syllabus_pipeline(
                                       verbose=verbose)
 
     return syllabus_pipeline
+
+
+def prepare_section_judge_pipeline(
+        law_llm: HuggingFaceLLMModified,
+        judge_section_template: str = JUDGE_SECTION_TEMPLATE,
+        format_judge_template: str = FORMAT_JUDGE_TEMPLATE,
+        verbose: bool = False) -> QueryPipeline:
+    """Prepare a pipeline for judging a section of a privacy policy
+
+    :param law_llm: a law LLM to judge a section
+    :param judge_section_template: a template for judging a section
+    :param format_judge_template: a template for formatting a judge
+    :param verbose: whether to show verbose output
+    :return: a pipeline for judging a section of a privacy policy
+    """
+
+    judge_section_template = PromptTemplate(judge_section_template)
+    judge_parser = PydanticOutputParser(Judges)
+    format_judge_template = PromptTemplate(
+        judge_parser.format(format_judge_template))
+
+    # create a pipeline
+    judge_pipeline = QueryPipeline(chain=[
+        judge_section_template,
+        law_llm,
+        format_judge_template,
+        Settings.llm,
+        judge_parser,
+    ],
+                                   verbose=verbose)
+
+    return judge_pipeline

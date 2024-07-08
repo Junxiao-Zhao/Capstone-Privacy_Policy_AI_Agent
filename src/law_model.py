@@ -2,6 +2,7 @@ import uuid
 from typing import Sequence, List, Any, Dict, Tuple
 
 from llama_index.core.agent import CustomSimpleAgentWorker
+from llama_index.core.base.llms.types import CompletionResponse
 from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core.tools import ToolOutput
 from llama_index.core.memory import ChatMemoryBuffer
@@ -88,13 +89,25 @@ class SimpleLLMAgentWorker(CustomSimpleAgentWorker):
         task.extra_state["new_memory"].reset()
 
 
-def prepare_law_agent(model_name: str, verbose: bool = False, **kwargs):
-    """Prepare a law agent with the given model name
+class HuggingFaceLLMModified(HuggingFaceLLM):
+    """A modified HuggingFace LLM for complete"""
+
+    def complete(self,
+                 prompt: str,
+                 formatted: bool = False,
+                 **kwargs: Any) -> CompletionResponse:
+
+        if '[INST]' not in prompt:
+            prompt = self.messages_to_prompt(
+                [ChatMessage(content=prompt, role=MessageRole.USER)])
+        return super().complete(prompt, formatted, **kwargs)
+
+
+def prepare_law_llm(model_name: str) -> HuggingFaceLLMModified:
+    """Prepare a law LLM with the given model name
 
     :params model_name: the model name
-    :params verbose: verbose mode
-    :params kwargs: additional arguments for `as_agent`
-    :return: a law agent
+    :return: a law LLM
     """
 
     # load the model
@@ -129,12 +142,26 @@ def prepare_law_agent(model_name: str, verbose: bool = False, **kwargs):
 
         return prompt
 
-    law_llm = HuggingFaceLLM(
+    law_llm = HuggingFaceLLMModified(
         model_name=model_name,
         model=model,
         tokenizer=tokenizer,
         messages_to_prompt=messages_to_prompt,
     )
+
+    return law_llm
+
+
+def prepare_law_agent(model_name: str, verbose: bool = False, **kwargs):
+    """Prepare a law agent with the given model name
+
+    :params model_name: the model name
+    :params verbose: verbose mode
+    :params kwargs: additional arguments for `as_agent`
+    :return: a law agent
+    """
+
+    law_llm = prepare_law_llm(model_name)
 
     # create agent
     law_agent_worker = SimpleLLMAgentWorker(
