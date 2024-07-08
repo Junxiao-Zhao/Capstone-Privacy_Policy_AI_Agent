@@ -2,11 +2,11 @@ import pandas as pd
 from llama_index.core import SummaryIndex, PromptTemplate, Settings
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.core.query_engine import SubQuestionQueryEngine
-from llama_index.core.query_pipeline import QueryPipeline
+from llama_index.core.query_pipeline import QueryPipeline, FnComponent
 from llama_index.core.output_parsers import PydanticOutputParser
 from llama_index.readers.web import SimpleWebPageReader
 
-from .formats import Syllabus, Judges
+from .formats import Syllabus, Judges, SectionNames
 from .prompts import (
     ASK_SYLLABUS_TEMPLATE,
     FORMAT_SYLLABUS_TEMPLATE,
@@ -103,14 +103,48 @@ def prepare_section_judge_pipeline(
     format_judge_template = PromptTemplate(
         judge_parser.format(format_judge_template))
 
+    def determine_judge(judges: Judges, prompt: str):
+
+        section_name = ''
+        for section in SectionNames:
+            if section.value in prompt:
+                section_name = section.value
+
+        if not section_name:
+            raise ValueError("Section name not found in prompt.")
+
+        for judge in judges.judges:
+            if judge.name.value == section_name:
+                return {"pass": False, "suggestions": judge.suggestions}
+
+            return {"pass": True, "suggestions": ""}
+
     # create a pipeline
-    judge_pipeline = QueryPipeline(chain=[
+    judge_pipeline = QueryPipeline(verbose=verbose)
+    judge_pipeline.add_modules({
+        "judge_section_template":
         judge_section_template,
+        "law_llm":
         law_llm,
+        "format_judge_template":
         format_judge_template,
+        "llm":
         Settings.llm,
+        "judge_parser":
         judge_parser,
-    ],
-                                   verbose=verbose)
+        "determine_judge":
+        FnComponent(fn=determine_judge),
+    })
+
+    judge_pipeline.add_link("judge_section_template", "law_llm")
+    judge_pipeline.add_link("law_llm", "format_judge_template")
+    judge_pipeline.add_link("format_judge_template", "llm")
+    judge_pipeline.add_link("llm", "judge_parser")
+    judge_pipeline.add_link("judge_parser",
+                            "determine_judge",
+                            dest_key="judges")
+    judge_pipeline.add_link("judge_section_template",
+                            "determine_judge",
+                            dest_key="prompt")
 
     return judge_pipeline
