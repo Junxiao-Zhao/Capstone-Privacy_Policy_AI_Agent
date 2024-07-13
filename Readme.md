@@ -1,7 +1,7 @@
 # Capstone Idea
 
 ## Intro
-In this project, we’d like to develop a chatbot that could help developers generate customized privacy policies for their products following specific Data Protection Regulations.
+In this project, we’d like to develop an agent that could help users generate customized privacy policies for their products/webs/apps following specific Data Protection Regulations.
 
 ## Methods
 ### Stage 1
@@ -30,3 +30,35 @@ In this project, we’d like to develop a chatbot that could help developers gen
     - Select the most suitable template based on the requirement;
     - Providing with the template and examples, let the LLM to generate a customized privacy policy;
 2. Presentation.
+
+## Components
+### Syllabus Generator:
+- input: json (names of regulations)
+- realize: 
+    1. `SubQuestionQueryEngine` collects regulations
+    2. llm generate syllabus for each
+    3. llm merges the syllabus to one
+- output: json (section name with suggestions)
+
+### Section Generator:
+- input: json (section name & templates)
+- realize: 
+    1. `SubQuestionQueryEngine` collects examples (?)
+    2. llm generate sections for each based on examples, input templates, bullet points from regulations
+    3. call judge generator
+    4. if not pass, call sections modify
+- output: json (success, sections)
+
+### Section Modify:
+- input: str (generated sections), str (suggestions), str (bullet points from syllabus)
+- realize: 
+    1. for loop
+    2. let llm regenerate
+    3. call judge generator
+    4. if pass, break; else, continue
+- output: json (success, sections)
+
+### Judge Generator:
+- input: str (generated section), section name, regulation names
+- realize: use law model to judge the sections
+- output: json (pass, suggestions)
