@@ -1,9 +1,12 @@
+from typing import Optional
+
 import pandas as pd
 from llama_index.core import SummaryIndex, PromptTemplate, Settings
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.core.query_engine import SubQuestionQueryEngine
 from llama_index.core.query_pipeline import QueryPipeline, FnComponent
 from llama_index.core.output_parsers import PydanticOutputParser
+from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 from llama_index.readers.web import SimpleWebPageReader
 
 from .formats import Syllabus, Judges, SectionNames
@@ -54,6 +57,7 @@ def prepare_regulation_syllabus_pipeline(
     regulation_query_engine: SubQuestionQueryEngine,
     ask_syllabus_template: str = ASK_SYLLABUS_TEMPLATE,
     format_syllabus_template: str = FORMAT_SYLLABUS_TEMPLATE,
+    token_counter: Optional[TokenCountingHandler] = None,
     verbose: bool = False,
 ) -> QueryPipeline:
     """Prepare a pipeline for generating a privacy policy syllabus
@@ -62,6 +66,7 @@ def prepare_regulation_syllabus_pipeline(
     :param regulation_query_engine: a query engine for regulations
     :param ask_syllabus_template: a template for asking a syllabus
     :param format_syllabus_template: a template for formatting a syllabus
+    :param token_counter: a token counter for counting tokens
     :param verbose: whether to show verbose output
     :return: a pipeline for generating a syllabus for regulations
     """
@@ -72,14 +77,23 @@ def prepare_regulation_syllabus_pipeline(
         syllabus_parser.format(format_syllabus_template))
 
     # create a pipeline
-    syllabus_pipeline = QueryPipeline(chain=[
-        ask_syllabus_template,
-        regulation_query_engine,
-        format_syllabus_template,
-        Settings.llm,
-        syllabus_parser,
-    ],
-                                      verbose=verbose)
+    syllabus_pipeline = QueryPipeline(
+        chain=[
+            ask_syllabus_template,
+            regulation_query_engine,
+            format_syllabus_template,
+            Settings.llm,
+            syllabus_parser,
+            FnComponent(
+                fn=lambda input: {
+                    section.name.value: section.key_points
+                    for section in input.sections
+                }),
+        ],
+        callback_manager=CallbackManager([token_counter])
+        if token_counter else None,
+        verbose=verbose,
+    )
 
     return syllabus_pipeline
 
@@ -88,12 +102,14 @@ def prepare_section_judge_pipeline(
         law_llm: HuggingFaceLLMModified,
         judge_section_template: str = JUDGE_SECTION_TEMPLATE,
         format_judge_template: str = FORMAT_JUDGE_TEMPLATE,
+        token_counter: Optional[TokenCountingHandler] = None,
         verbose: bool = False) -> QueryPipeline:
     """Prepare a pipeline for judging a section of a privacy policy
 
     :param law_llm: a law LLM to judge a section
     :param judge_section_template: a template for judging a section
     :param format_judge_template: a template for formatting a judge
+    :param token_counter: a token counter for counting tokens
     :param verbose: whether to show verbose output
     :return: a pipeline for judging a section of a privacy policy
     """
@@ -109,18 +125,22 @@ def prepare_section_judge_pipeline(
         for section in SectionNames:
             if section.value in prompt:
                 section_name = section.value
-
-        if not section_name:
+                break
+        else:
             raise ValueError("Section name not found in prompt.")
 
         for judge in judges.judges:
             if judge.name.value == section_name:
                 return {"pass": False, "suggestions": judge.suggestions}
 
-            return {"pass": True, "suggestions": ""}
+        return {"pass": True, "suggestions": ""}
 
     # create a pipeline
-    judge_pipeline = QueryPipeline(verbose=verbose)
+    judge_pipeline = QueryPipeline(
+        callback_manager=CallbackManager([token_counter])
+        if token_counter else None,
+        verbose=verbose,
+    )
     judge_pipeline.add_modules({
         "judge_section_template":
         judge_section_template,
