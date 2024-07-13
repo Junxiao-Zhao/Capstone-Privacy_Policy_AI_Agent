@@ -19,16 +19,21 @@ class SectionNames(str, Enum):
     SECTION12 = "Contact Information"
 
 
-class Section(BaseModel):
+class SectionKeyPoints(BaseModel):
     name: SectionNames = Field(..., title="Section Name")
     key_points: List[str] = Field(..., title="List of Key Points")
 
 
-SectionList = conlist(Section, min_length=12, max_length=12)
+SectionList = conlist(SectionKeyPoints, min_length=12, max_length=12)
 
 
 class Syllabus(BaseModel):
     sections: SectionList = Field(..., title="List of Sections")
+
+
+class SectionContent(BaseModel):
+    name: SectionNames = Field(..., title="Section Name")
+    content: str = Field(..., title="Section Content")
 
 
 class Judge(BaseModel):
