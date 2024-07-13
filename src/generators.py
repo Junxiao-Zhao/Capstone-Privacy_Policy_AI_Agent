@@ -1,4 +1,5 @@
-from typing import Optional
+import logging
+from typing import Optional, Dict, List
 
 import pandas as pd
 from llama_index.core import SummaryIndex, PromptTemplate, Settings
@@ -9,14 +10,119 @@ from llama_index.core.output_parsers import PydanticOutputParser
 from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 from llama_index.readers.web import SimpleWebPageReader
 
-from .formats import Syllabus, Judges, SectionNames
+from .formats import (
+    Syllabus,
+    Judges,
+    SectionNames,
+    SectionContent,
+)
 from .prompts import (
     ASK_SYLLABUS_TEMPLATE,
     FORMAT_SYLLABUS_TEMPLATE,
+    REGENERATE_PROMPT,
     JUDGE_SECTION_TEMPLATE,
     FORMAT_JUDGE_TEMPLATE,
 )
-from .law_model import HuggingFaceLLMModified
+from .law_model import HuggingFaceLLMModified, prepare_law_llm
+
+
+class PrivacyPolicyGenerator:
+
+    def __init__(
+        self,
+        regulation_query_engine: SubQuestionQueryEngine,
+        syllabus_pipeline: QueryPipeline,
+        generate_pipeline: QueryPipeline,
+        regenerate_pipeline: QueryPipeline,
+        judge_pipeline: QueryPipeline,
+    ):
+        """Constructor
+
+        :param regulation_query_engine: a query engine for regulations
+        :param syllabus_pipeline: a pipeline for generating a syllabus
+        :param generate_pipeline: a pipeline for generating a section
+        :param regenerate_pipeline: a pipeline for regenerating a section
+        :param judge_pipeline: a pipeline for judging a section
+        """
+
+        self.regulation_query_engine = regulation_query_engine
+        self.syllabus_pipeline = syllabus_pipeline
+        self.generate_pipeline = generate_pipeline
+        self.regenerate_pipeline = regenerate_pipeline
+        self.judge_pipeline = judge_pipeline
+
+    @classmethod
+    def from_defaults(cls, links_df: pd.DataFrame, verbose: bool = False):
+        """Create a privacy policy generator from defaults
+
+        :param links_df: a DataFrame with columns 'regulations' and 'links'
+        :param verbose: whether to show verbose output
+        :return: a privacy policy generator
+        """
+
+        regulation_query_engine = prepare_regulation_query_engine(links_df)
+        syllabus_pipeline = prepare_regulation_syllabus_pipeline(
+            regulation_query_engine, verbose=verbose)
+        generate_pipline = None  # TODO
+        regenerate_pipeline = prepare_regenerate_pipeline(verbose=verbose)
+        law_llm = prepare_law_llm()
+        judge_pipeline = prepare_section_judge_pipeline(law_llm,
+                                                        verbose=verbose)
+
+        return cls(
+            regulation_query_engine=regulation_query_engine,
+            syllabus_pipeline=syllabus_pipeline,
+            generate_pipeline=generate_pipline,
+            regenerate_pipeline=regenerate_pipeline,
+            judge_pipeline=judge_pipeline,
+        )
+
+    def regenerate(
+        self,
+        section_name: str,
+        section_text: str,
+        suggestions: str,
+        key_points: Dict[str, List[str]],
+        regulations: List[str],
+        threshold: int = 5,
+    ):
+        """Regenerate a section of a privacy policy
+
+        :param section_name: the name of the section
+        :param section_text: the text of the section
+        :param suggestions: the suggestions for improvement
+        :param key_points: the key points of the section
+        :param regulations: the regulations to comply with
+        :param threshold: the maximum number of attempts to regenerate
+        :return: success or not and the regenerated section
+        """
+
+        for i in range(threshold):
+
+            regenerate = self.regenerate_pipeline.run(
+                section_name=section_name,
+                section_text=section_text,
+                suggestions=suggestions,
+                key_points='\n'.join(key_points[section_name]),
+            )
+
+            judge = self.judge_pipeline.run(
+                section_name=section_name,
+                section_text=regenerate.content,
+                regulations='\n'.join(regulations),
+            )
+
+            if judge['pass']:
+                return {"success": True, "content": regenerate.content}
+
+            else:
+                suggestions = judge['suggestions']
+                section_text = regenerate.content
+        else:
+            logging.getLogger(__name__).warn(
+                "Failed to pass law model after threshold %d.", threshold)
+
+        return {"success": False, "content": regenerate.content}
 
 
 def prepare_regulation_query_engine(
@@ -98,12 +204,39 @@ def prepare_regulation_syllabus_pipeline(
     return syllabus_pipeline
 
 
+def prepare_regenerate_pipeline(
+    regenerate_template: str = REGENERATE_PROMPT,
+    token_counter: Optional[TokenCountingHandler] = None,
+    verbose: bool = False,
+) -> QueryPipeline:
+    """Prepare a pipeline for regenerating a section of a privacy policy
+
+    :param regenerate_template: a template for regenerating a section
+    :param token_counter: a token counter for counting tokens
+    :param verbose: whether to show verbose output
+    :return: a pipeline for regenerating a section of a privacy policy
+    """
+
+    regenerate_parser = PydanticOutputParser(SectionContent)
+    regenerate_template = PromptTemplate(
+        regenerate_parser.format(regenerate_template))
+    regenerate_pipeline = QueryPipeline(
+        chain=[regenerate_template, Settings.llm, regenerate_parser],
+        callback_manager=CallbackManager([token_counter])
+        if token_counter else None,
+        verbose=verbose,
+    )
+
+    return regenerate_pipeline
+
+
 def prepare_section_judge_pipeline(
-        law_llm: HuggingFaceLLMModified,
-        judge_section_template: str = JUDGE_SECTION_TEMPLATE,
-        format_judge_template: str = FORMAT_JUDGE_TEMPLATE,
-        token_counter: Optional[TokenCountingHandler] = None,
-        verbose: bool = False) -> QueryPipeline:
+    law_llm: HuggingFaceLLMModified,
+    judge_section_template: str = JUDGE_SECTION_TEMPLATE,
+    format_judge_template: str = FORMAT_JUDGE_TEMPLATE,
+    token_counter: Optional[TokenCountingHandler] = None,
+    verbose: bool = False,
+) -> QueryPipeline:
     """Prepare a pipeline for judging a section of a privacy policy
 
     :param law_llm: a law LLM to judge a section

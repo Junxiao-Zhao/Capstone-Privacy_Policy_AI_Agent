@@ -103,7 +103,9 @@ class HuggingFaceLLMModified(HuggingFaceLLM):
         return super().complete(prompt, formatted, **kwargs)
 
 
-def prepare_law_llm(model_name: str) -> HuggingFaceLLMModified:
+def prepare_law_llm(
+        model_name: str = "Equall/Saul-7B-Instruct-v1"
+) -> HuggingFaceLLMModified:
     """Prepare a law LLM with the given model name
 
     :params model_name: the model name

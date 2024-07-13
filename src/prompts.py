@@ -13,6 +13,20 @@ DO NOT modify the key points!!!
 Please rearrange the sections and key points and output with the \
 following JSON format:"""
 
+REGENERATE_PROMPT = """\
+This {section_name} is a section of a privacy policy:
+
+{section_text}
+
+Now, please revise the section based on the following suggestions:
+
+{suggestions}
+
+NOTE THAT: The revised section should comply with the following key points:
+
+{key_points}
+"""
+
 JUDGE_SECTION_TEMPLATE = """\
 This {section_name} is a section of a privacy policy:
 
