@@ -1,5 +1,5 @@
 import logging
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 
 import pandas as pd
 from llama_index.core import SummaryIndex, PromptTemplate, Settings
@@ -19,6 +19,7 @@ from .formats import (
 from .prompts import (
     ASK_SYLLABUS_TEMPLATE,
     FORMAT_SYLLABUS_TEMPLATE,
+    GENERATE_PROMPT,
     REGENERATE_PROMPT,
     JUDGE_SECTION_TEMPLATE,
     FORMAT_JUDGE_TEMPLATE,
@@ -63,8 +64,10 @@ class PrivacyPolicyGenerator:
         regulation_query_engine = prepare_regulation_query_engine(links_df)
         syllabus_pipeline = prepare_regulation_syllabus_pipeline(
             regulation_query_engine, verbose=verbose)
-        generate_pipline = None  # TODO
-        regenerate_pipeline = prepare_regenerate_pipeline(verbose=verbose)
+        generate_pipline = prepare_generate_pipeline(GENERATE_PROMPT,
+                                                     verbose=verbose)
+        regenerate_pipeline = prepare_generate_pipeline(REGENERATE_PROMPT,
+                                                        verbose=verbose)
         law_llm = prepare_law_llm()
         judge_pipeline = prepare_section_judge_pipeline(law_llm,
                                                         verbose=verbose)
@@ -77,13 +80,62 @@ class PrivacyPolicyGenerator:
             judge_pipeline=judge_pipeline,
         )
 
+    def get_syllabus(self, regulations: List[str]) -> Dict[str, List[str]]:
+        """Get a privacy policy syllabus
+
+        :param regulations: the regulations to comply with
+        :return: a privacy policy syllabus
+        """
+
+        self.regulations = ', '.join(regulations)
+        self.syllabus = self.syllabus_pipeline.run(
+            regulations=self.regulations)
+
+        return self.syllabus
+
+    def generate(
+        self,
+        section_name: str,
+        information: str,
+        threshold: int = 5,
+    ) -> Dict[str, Any]:
+        """Generate a section of a privacy policy
+
+        :param section_name: the name of the section
+        :param information: the information for generating the section
+        :param threshold: the maximum number of attempts to regenerate
+        :return: success or not and the generated section
+        """
+
+        # generate a section
+        section_content = self.generate_pipeline.run(
+            section_name=section_name,
+            information=information,
+            key_points='\n'.join(self.syllabus[section_name]),
+        )
+
+        # judge the section
+        judge = self.judge_pipeline.run(
+            section_name=section_name,
+            section_text=section_content.content,
+            regulations=self.regulations,
+        )
+
+        if judge['pass']:
+            return {"success": True, "content": section_content.content}
+
+        return self.regenerate(
+            section_name=section_name,
+            section_text=section_content.content,
+            suggestions=judge['suggestions'],
+            threshold=threshold,
+        )
+
     def regenerate(
         self,
         section_name: str,
         section_text: str,
         suggestions: str,
-        key_points: Dict[str, List[str]],
-        regulations: List[str],
         threshold: int = 5,
     ):
         """Regenerate a section of a privacy policy
@@ -91,11 +143,11 @@ class PrivacyPolicyGenerator:
         :param section_name: the name of the section
         :param section_text: the text of the section
         :param suggestions: the suggestions for improvement
-        :param key_points: the key points of the section
-        :param regulations: the regulations to comply with
         :param threshold: the maximum number of attempts to regenerate
         :return: success or not and the regenerated section
         """
+
+        key_points = '\n'.join(self.syllabus[section_name])
 
         for i in range(threshold):
 
@@ -103,13 +155,13 @@ class PrivacyPolicyGenerator:
                 section_name=section_name,
                 section_text=section_text,
                 suggestions=suggestions,
-                key_points='\n'.join(key_points[section_name]),
+                key_points=key_points,
             )
 
             judge = self.judge_pipeline.run(
                 section_name=section_name,
                 section_text=regenerate.content,
-                regulations='\n'.join(regulations),
+                regulations=self.regulations,
             )
 
             if judge['pass']:
@@ -204,24 +256,24 @@ def prepare_regulation_syllabus_pipeline(
     return syllabus_pipeline
 
 
-def prepare_regenerate_pipeline(
-    regenerate_template: str = REGENERATE_PROMPT,
+def prepare_generate_pipeline(
+    generate_template: str,
     token_counter: Optional[TokenCountingHandler] = None,
     verbose: bool = False,
 ) -> QueryPipeline:
-    """Prepare a pipeline for regenerating a section of a privacy policy
+    """Prepare a pipeline for (re)generating a section of a privacy policy
 
-    :param regenerate_template: a template for regenerating a section
+    :param generate_template: a template for (re)generating a section
     :param token_counter: a token counter for counting tokens
     :param verbose: whether to show verbose output
-    :return: a pipeline for regenerating a section of a privacy policy
+    :return: a pipeline for (re)generating a section of a privacy policy
     """
 
-    regenerate_parser = PydanticOutputParser(SectionContent)
-    regenerate_template = PromptTemplate(
-        regenerate_parser.format(regenerate_template))
+    generate_parser = PydanticOutputParser(SectionContent)
+    generate_template = PromptTemplate(
+        generate_parser.format(generate_template))
     regenerate_pipeline = QueryPipeline(
-        chain=[regenerate_template, Settings.llm, regenerate_parser],
+        chain=[generate_template, Settings.llm, generate_parser],
         callback_manager=CallbackManager([token_counter])
         if token_counter else None,
         verbose=verbose,
