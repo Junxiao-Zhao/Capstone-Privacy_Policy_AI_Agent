@@ -13,6 +13,17 @@ DO NOT modify the key points!!!
 Please rearrange the sections and key points and output with the \
 following JSON format:"""
 
+GENERATE_PROMPT = """\
+Please generate a {section_name} section of a privacy policy \
+based on these information provided below:
+
+{information}
+
+NOTE THAT: The generated section should comply with the following key points:
+
+{key_points}
+"""
+
 REGENERATE_PROMPT = """\
 This {section_name} is a section of a privacy policy:
 
