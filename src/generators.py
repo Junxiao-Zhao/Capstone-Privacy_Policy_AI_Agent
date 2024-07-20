@@ -5,7 +5,11 @@ import pandas as pd
 from llama_index.core import SummaryIndex, PromptTemplate, Settings
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.core.query_engine import SubQuestionQueryEngine
-from llama_index.core.query_pipeline import QueryPipeline, FnComponent
+from llama_index.core.query_pipeline import (
+    QueryPipeline,
+    FnComponent,
+    InputComponent,
+)
 from llama_index.core.output_parsers import PydanticOutputParser
 from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 from llama_index.readers.web import SimpleWebPageReader
@@ -13,7 +17,6 @@ from llama_index.readers.web import SimpleWebPageReader
 from .formats import (
     Syllabus,
     Judges,
-    SectionNames,
     SectionContent,
 )
 from .prompts import (
@@ -299,20 +302,13 @@ def prepare_section_judge_pipeline(
     :return: a pipeline for judging a section of a privacy policy
     """
 
+    input_component = InputComponent()
     judge_section_template = PromptTemplate(judge_section_template)
     judge_parser = PydanticOutputParser(Judges)
     format_judge_template = PromptTemplate(
         judge_parser.format(format_judge_template))
 
-    def determine_judge(judges: Judges, prompt: str):
-
-        section_name = ''
-        for section in SectionNames:
-            if section.value in prompt:
-                section_name = section.value
-                break
-        else:
-            raise ValueError("Section name not found in prompt.")
+    def determine_judge(judges: Judges, section_name: str):
 
         for judge in judges.judges:
             if judge.name.value == section_name:
@@ -322,25 +318,32 @@ def prepare_section_judge_pipeline(
 
     # create a pipeline
     judge_pipeline = QueryPipeline(
+        modules={
+            "input": input_component,
+            "judge_section_template": judge_section_template,
+            "law_llm": law_llm,
+            "format_judge_template": format_judge_template,
+            "llm": Settings.llm,
+            "judge_parser": judge_parser,
+            "determine_judge": FnComponent(fn=determine_judge),
+        },
         callback_manager=CallbackManager([token_counter])
         if token_counter else None,
         verbose=verbose,
     )
-    judge_pipeline.add_modules({
-        "judge_section_template":
-        judge_section_template,
-        "law_llm":
-        law_llm,
-        "format_judge_template":
-        format_judge_template,
-        "llm":
-        Settings.llm,
-        "judge_parser":
-        judge_parser,
-        "determine_judge":
-        FnComponent(fn=determine_judge),
-    })
 
+    judge_pipeline.add_link("input",
+                            "judge_section_template",
+                            src_key="section_name",
+                            dest_key="section_name")
+    judge_pipeline.add_link("input",
+                            "judge_section_template",
+                            src_key="section_text",
+                            dest_key="section_text")
+    judge_pipeline.add_link("input",
+                            "judge_section_template",
+                            src_key="regulations",
+                            dest_key="regulations")
     judge_pipeline.add_link("judge_section_template", "law_llm")
     judge_pipeline.add_link("law_llm", "format_judge_template")
     judge_pipeline.add_link("format_judge_template", "llm")
@@ -348,8 +351,9 @@ def prepare_section_judge_pipeline(
     judge_pipeline.add_link("judge_parser",
                             "determine_judge",
                             dest_key="judges")
-    judge_pipeline.add_link("judge_section_template",
+    judge_pipeline.add_link("input",
                             "determine_judge",
-                            dest_key="prompt")
+                            src_key="section_name",
+                            dest_key="section_name")
 
     return judge_pipeline
