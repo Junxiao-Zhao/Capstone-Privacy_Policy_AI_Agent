@@ -8,24 +8,30 @@ from llama_index.core.query_engine import SubQuestionQueryEngine
 from llama_index.readers.web import SimpleWebPageReader
 from .data_regulation_prompts import REGION_TEMPLATE
 import json
+import pandas as pd
 
-DATA_REGULATION_PATH = '../data/regulations/region_data_regulations.json'
+#DATA_REGULATION_PATH = '../data/regulations/region_data_regulations.json'
+REGION_DATA_REGULATION_PATH = '../data/regulations/Region Data Regulations.csv'
 
 class DataRegulationAgent:
 
     def __init__(
             self,
-            api_key
+            api_key: str,
+            model: str = 'gpt-4o',
+            region_template: str = REGION_TEMPLATE
                  ):
         self.api_key = api_key
-        self.llm = OpenAI(model="gpt-4o", openai_api_key=api_key)
+        self.llm = OpenAI(model=model, openai_api_key=api_key)
         Settings.llm = self.llm
-        self.REGION_TEMPLATE = REGION_TEMPLATE
-        with open(DATA_REGULATION_PATH) as f:
-            self.region_data_regulations = json.load(f)
+        self.REGION_TEMPLATE = region_template
+        self.region_data_regulations = pd.read_csv(REGION_DATA_REGULATION_PATH)
+        self.region_url_dict = dict(zip(self.region_data_regulations['regions'], 
+                                        self.region_data_regulations['links']))
 
-    @classmethod
-    def determine_region(self, user_input: str, temperature: float = 0.3, max_tokens: int = 50) -> str:
+    def determine_region(self, user_input: str, 
+                         temperature: float = 0.3, 
+                         max_tokens: int = 50) -> str:
         """
         Finding a region corresponding to the user's input.
         """
@@ -46,7 +52,7 @@ class DataRegulationAgent:
         """
         Get data regulation url.
         """
-        return self.region_data_regulations.get(region_name, "Privacy law URL not found for this region")
+        return self.region_url_dict.get(region_name, "Privacy law URL not found for this region")
 
     def get_data_regulation_links(self, user_input: str) -> Tuple[List[str], List[str]]:
         """
