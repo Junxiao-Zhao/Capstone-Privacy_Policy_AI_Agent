@@ -6,14 +6,14 @@ from llama_index.core import Settings, VectorStoreIndex
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.core.query_engine import SubQuestionQueryEngine
 from llama_index.readers.web import SimpleWebPageReader
-from .data_regulation_prompts import REGION_TEMPLATE
+from .data_regulation_prompts import REGION_TEMPLATE, INDUSTRY_TEMPLATE
 import json
 import pandas as pd
 
-#DATA_REGULATION_PATH = '../data/regulations/region_data_regulations.json'
 REGION_DATA_REGULATION_PATH = '../data/regulations/Region Data Regulations.csv'
+INDUSTRY_DATA_REGULATION_PATH = '../data/regulations/Industry Data Regulations.csv'
 
-class DataRegulationAgent:
+class RegionDataRegulationAgent:
 
     def __init__(
             self,
@@ -26,6 +26,7 @@ class DataRegulationAgent:
         Settings.llm = self.llm
         self.REGION_TEMPLATE = region_template
         self.region_data_regulations = pd.read_csv(REGION_DATA_REGULATION_PATH)
+        self.region_list = list(self.region_data_regulations['regions'])
         self.region_url_dict = dict(zip(self.region_data_regulations['regions'], 
                                         self.region_data_regulations['links']))
 
@@ -35,7 +36,7 @@ class DataRegulationAgent:
         """
         Finding a region corresponding to the user's input.
         """
-        prompt = self.REGION_TEMPLATE.format(user_input=user_input)
+        prompt = self.REGION_TEMPLATE.format(regions = ', '.join(self.region_list), user_input=user_input)
         response = self.llm.complete(prompt=prompt, max_tokens = max_tokens, temperature=temperature)
         answer = response.text
         return answer
@@ -52,7 +53,7 @@ class DataRegulationAgent:
         """
         Get data regulation url.
         """
-        return self.region_url_dict.get(region_name, "Privacy law URL not found for this region")
+        return self.region_url_dict.get(region_name, "Data Regulation URL not found for this region.")
 
     def get_data_regulation_links(self, user_input: str) -> Tuple[List[str], List[str]]:
         """
@@ -106,5 +107,61 @@ class DataRegulationAgent:
             ),
         )
         return data_regulation_query_engine_tool
+    
+class IndustryDataRegulationAgent:
+
+    def __init__(
+            self,
+            api_key: str,
+            model: str = 'gpt-4o',
+            industry_template: str = INDUSTRY_TEMPLATE
+                 ):
+        self.api_key = api_key
+        self.llm = OpenAI(model=model, openai_api_key=api_key)
+        Settings.llm = self.llm
+        self.INDUSTRY_TEMPLATE = industry_template
+        self.industry_data_regulations = pd.read_csv(INDUSTRY_DATA_REGULATION_PATH)
+        self.industry_list = list(self.industry_data_regulations['industry'])
 
 
+    def determine_industry(self, user_input: str, 
+                         temperature: float = 0.3, 
+                         max_tokens: int = 50) -> str:
+        """
+        Finding a industry corresponding to the user's input.
+        """
+        prompt = self.INDUSTRY_TEMPLATE.format(industries = ', '.join(self.industry_list), user_input=user_input)
+        response = self.llm.complete(prompt=prompt, max_tokens = max_tokens, temperature=temperature)
+        answer = response.text
+        return answer
+
+    def clean_industry_output(self, text: str) -> str:
+        """
+        Clean generated response
+        """
+        text = text.strip().replace("The industry that the user input belongs to is (are):", "").strip()
+        text = text.split('\n')[0]
+        return text
+
+    def get_data_regulation_url(self, industry_name: str) -> str:
+        """
+        Get data regulation url.
+        """
+        if industry_name not in self.industry_list:
+            print("Data Regulation URL not found for this industry.")
+        else:
+            return self.industry_data_regulations[self.industry_data_regulations['industry'] == industry_name]['links'].tolist()
+
+    def get_data_regulation_links(self, user_input: str) -> Tuple[List[str], List[str]]:
+        """
+        Get all data regulation links that are relevant to the user's input industry.
+        """
+        industry = self.determine_industry(user_input)
+        industry = self.clean_industry_output(industry)
+        industry_list = industry.split(', ')
+        links: List[str] = []
+        for industry in industry_list:
+            link = self.get_data_regulation_url(industry)
+            links += link
+        return industry_list, links
+    
