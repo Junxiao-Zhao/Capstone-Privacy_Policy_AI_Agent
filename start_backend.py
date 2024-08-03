@@ -10,7 +10,7 @@ load_dotenv()
 logging.config.fileConfig('./config/logging.cfg')
 llama_index.core.set_global_handler(
     "simple",
-    logger=logging.getLogger(__name__),
+    logger=logging.getLogger('agent'),
 )
 
 if __name__ == '__main__':

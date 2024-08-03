@@ -1,0 +1,8 @@
+fastapi==0.112.0
+llama_index==0.10.59
+pandas==2.2.2
+pydantic==2.8.2
+python-dotenv==1.0.1
+streamlit==1.22.0
+transformers==4.40.0
+uvicorn==0.30.5

@@ -58,6 +58,8 @@ def retry_on_exception(retries: int = 5, delay: float = 1.0):
                 except Exception as e:
                     last_exception = e
                     await asyncio.sleep(delay)
+
+            logging.getLogger(__name__).exception(last_exception)
             raise HTTPException(status_code=500, detail=str(last_exception))
 
         return wrapper
