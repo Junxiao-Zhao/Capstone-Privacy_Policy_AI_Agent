@@ -1,3 +1,5 @@
+from .formats import SectionNames, RegulationRegions
+
 ASK_SYLLABUS_TEMPLATE = """\
 I want to write a privacy policy, which should be {regulations} compliant.
 What sections should it include? And for each section, what key \
@@ -7,11 +9,14 @@ List them as bullet points."""
 FORMAT_SYLLABUS_TEMPLATE = """\
 Given the privacy policy sections and key points:
 
-{query_str}
+{{query_str}}
 
 DO NOT modify the key points!!!
-Please rearrange the sections and key points and output with the \
-following JSON format:"""
+Please rearrange the sections and key points into these sections: \
+{section_names}, and output with the following JSON format:"""
+
+FORMAT_SYLLABUS_TEMPLATE = FORMAT_SYLLABUS_TEMPLATE.format(
+    section_names=', '.join([each.value for each in SectionNames]))
 
 GENERATE_PROMPT = """\
 Please generate a {section_name} section of a privacy policy \
@@ -57,3 +62,24 @@ Given the comments from a legal expert:
 Please extract the legal expert's suggestions on how to improve \
 the sections in a privacy policy.
 """
+
+REGION_SELECTION_TEMPLATE = """
+Assistant: I can help determine which region a user input belongs to.
+The regions are: {regions}. Make sure to include all options.
+
+Examples:
+User: los angeles
+Assistant: California, United States
+User: hong kong
+Assistant: Other
+User: berlin
+Assistant: European Union
+User: toronto
+Assistant: Canada
+Now, let's try with your input.
+User: {{user_input}}
+Assistant: The regions that the user input belongs to are:
+"""
+
+REGION_SELECTION_TEMPLATE = REGION_SELECTION_TEMPLATE.format(
+    regions=', '.join([each.value for each in RegulationRegions]))

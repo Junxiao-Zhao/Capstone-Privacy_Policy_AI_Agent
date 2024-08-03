@@ -54,3 +54,27 @@ class Judges(BaseModel):
         title="Judges",
         description="Judges for the sections.",
     )
+
+
+class RegulationRegions(str, Enum):
+    US = "United States"
+    USCA = "California"
+    EU = "European Union"
+    UK = "United Kingdom"
+    CA = "Canada"
+    AU = "Australia"
+    IN = "India"
+    SG = "Singapore"
+    JP = "Japan"
+    KR = "South Korea"
+    BR = "Brazil"
+    ZA = "South Africa"
+    OTHER = "Other"
+
+
+class SelectedRegions(BaseModel):
+    regions: List[RegulationRegions] = Field(
+        ...,
+        title="List of Selected Regions",
+        description=("List of selected regions. "
+                     "Note that some regions could be mutually inclusive."))
