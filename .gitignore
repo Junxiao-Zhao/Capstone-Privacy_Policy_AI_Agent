@@ -1,4 +1,5 @@
 *.pyc
 *.out
+*.log
 law_llm/
 version.txt
