@@ -1,9 +1,10 @@
 import logging
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 import pandas as pd
 from llama_index.core.query_engine import SubQuestionQueryEngine
 from llama_index.core.query_pipeline import QueryPipeline
+from llama_index.llms.text_generation_inference import TextGenerationInference
 
 from .prompts import (
     GENERATE_PROMPT,
@@ -44,10 +45,17 @@ class PrivacyPolicyGenerator:
         self.judge_pipeline = judge_pipeline
 
     @classmethod
-    def from_defaults(cls, links_df: pd.DataFrame, verbose: bool = False):
+    def from_defaults(
+        cls,
+        links_df: pd.DataFrame,
+        model_name: str = "Equall/Saul-7B-Instruct-v1",
+        model_url: Optional[str] = None,
+        verbose: bool = False,
+    ):
         """Create a privacy policy generator from defaults
 
         :param links_df: a DataFrame with columns 'regulations' and 'links'
+        :params model_url: the model url; if passed, use TGI, else load locally
         :param verbose: whether to show verbose output
         :return: a privacy policy generator
         """
@@ -59,7 +67,13 @@ class PrivacyPolicyGenerator:
                                                      verbose=verbose)
         regenerate_pipeline = prepare_generate_pipeline(REGENERATE_PROMPT,
                                                         verbose=verbose)
-        law_llm = prepare_law_llm()
+
+        if model_url:
+            law_llm = TextGenerationInference(model_url=model_url,
+                                              model_name=model_name,
+                                              token=False)
+        else:
+            law_llm = prepare_law_llm(model_name)
         judge_pipeline = prepare_section_judge_pipeline(law_llm,
                                                         verbose=verbose)
 
