@@ -1,5 +1,5 @@
 import uuid
-from typing import Sequence, List, Any, Dict, Tuple
+from typing import Sequence, List, Any, Dict, Tuple, Optional
 
 from llama_index.core.agent import CustomSimpleAgentWorker
 from llama_index.core.base.llms.types import CompletionResponse
@@ -10,6 +10,7 @@ from llama_index.core.bridge.pydantic import Field
 from llama_index.core.agent.types import Task, TaskStep
 from llama_index.core.chat_engine.types import AgentChatResponse
 from llama_index.llms.huggingface import HuggingFaceLLM
+from llama_index.llms.text_generation_inference import TextGenerationInference
 
 from transformers import (
     AutoTokenizer,
@@ -154,16 +155,25 @@ def prepare_law_llm(
     return law_llm
 
 
-def prepare_law_agent(model_name: str, verbose: bool = False, **kwargs):
+def prepare_law_agent(
+    model_name: str,
+    model_url: Optional[str] = None,
+    verbose: bool = False,
+    **kwargs,
+):
     """Prepare a law agent with the given model name
 
     :params model_name: the model name
+    :params model_url: the model url; if passed, use TGI, else load locally
     :params verbose: verbose mode
     :params kwargs: additional arguments for `as_agent`
     :return: a law agent
     """
 
-    law_llm = prepare_law_llm(model_name)
+    if model_url:
+        law_llm = TextGenerationInference(model_url=model_url, token=False)
+    else:
+        law_llm = prepare_law_llm(model_name)
 
     # create agent
     law_agent_worker = SimpleLLMAgentWorker(

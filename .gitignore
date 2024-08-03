@@ -1,2 +1,4 @@
 *.pyc
-credentials.json
+*.out
+law_llm/
+version.txt
