@@ -7,18 +7,22 @@ from typing import Dict, List, Any, Callable
 
 import pandas as pd
 from fastapi import FastAPI, UploadFile, HTTPException, Form
+from llama_index.core import StorageContext
+from llama_index.core.memory import VectorMemory
+from llama_index.core.indices import load_index_from_storage
 from llama_index.llms.text_generation_inference import TextGenerationInference
 
 from .prompts import (
     GENERATE_PROMPT,
     REGENERATE_PROMPT,
+    COMPOSE_SYLLABUS_TEMPLATE,
 )
 from .law_model import prepare_law_llm
 from .pipelines import (
-    prepare_regulation_query_engine,
     prepare_regulation_syllabus_pipeline,
     prepare_generate_pipeline,
     prepare_section_judge_pipeline,
+    prepare_region_selection_pipeline,
 )
 from .formats import SectionNames
 
@@ -35,14 +39,22 @@ verbose = os.getenv("VERBOSE", "false").lower() == "true"
 app = FastAPI(version=os.getenv("VERSION", "beta"))
 
 # prepare pipelines
-links_df = pd.read_csv('./data/regulations/regulations.csv', encoding='utf-8')
-regulation_query_engine = prepare_regulation_query_engine(links_df)
-syllabus_pipeline = prepare_regulation_syllabus_pipeline(
-    regulation_query_engine, verbose=verbose)
+links_df = pd.read_csv('./data/regulations/Region Data Regulation.csv',
+                       encoding='utf-8')
+syllabus_pipeline = prepare_regulation_syllabus_pipeline(verbose=verbose)
 generate_pipline = prepare_generate_pipeline(GENERATE_PROMPT, verbose=verbose)
 regenerate_pipeline = prepare_generate_pipeline(REGENERATE_PROMPT,
                                                 verbose=verbose)
 judge_pipeline = prepare_section_judge_pipeline(law_llm, verbose=verbose)
+region_selection_pipeline = prepare_region_selection_pipeline(verbose=verbose)
+
+# load regulation memory
+stored_history = StorageContext.from_defaults(
+    persist_dir='./data/regulations/vector_memory')
+regulation_memory = VectorMemory(
+    vector_index=load_index_from_storage(stored_history),
+    retriever_kwargs={"similarity_top_k": 1},
+)
 
 
 def retry_on_exception(retries: int = 5, delay: float = 1.0):
@@ -58,6 +70,8 @@ def retry_on_exception(retries: int = 5, delay: float = 1.0):
                 except Exception as e:
                     last_exception = e
                     await asyncio.sleep(delay)
+
+            logging.getLogger(__name__).exception(last_exception)
             raise HTTPException(status_code=500, detail=str(last_exception))
 
         return wrapper
@@ -65,6 +79,24 @@ def retry_on_exception(retries: int = 5, delay: float = 1.0):
     return decorator
 
 
+@app.post("/regulations")
+@retry_on_exception(retries=3, delay=2.0)
+async def select_regulations(areas: str = Form(...)):
+    """Select regulations based on the areas of services
+
+    :param areas: the areas of services
+    :return: a list of selected regulations, regions, and links
+    """
+
+    regions = await region_selection_pipeline.arun(user_input=areas)
+
+    sub_links_df = links_df.loc[links_df['regions'].isin(regions)]
+    sub_links_df = sub_links_df.drop(columns='file_paths', errors='ignore')
+
+    return sub_links_df.to_dict(orient='records')
+
+
+# TODO: add upload files
 @app.post("/syllabus")
 @retry_on_exception(retries=3, delay=2.0)
 async def get_syllabus(regulations: str = Form(...)) -> Dict[str, List[str]]:
@@ -74,7 +106,21 @@ async def get_syllabus(regulations: str = Form(...)) -> Dict[str, List[str]]:
     :return: a privacy policy syllabus
     """
 
-    syllabus = await syllabus_pipeline.arun(regulations=regulations)
+    regulations = map(str.strip, regulations.split(','))
+    stored_regulations = set(links_df['regulations'].to_list())
+    query_str = ''
+
+    for regulation in regulations:
+
+        if regulation in stored_regulations:
+            syllabus_content = regulation_memory.get(regulation)[1:]
+            query_str += COMPOSE_SYLLABUS_TEMPLATE.format(
+                regulation=regulation,
+                sections=syllabus_content[0].content,
+                key_points=syllabus_content[1].content,
+            )
+
+    syllabus = await syllabus_pipeline.arun(query_str=query_str)
     return syllabus
 
 

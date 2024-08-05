@@ -22,6 +22,7 @@ from .formats import (
 from .prompts import (
     ASK_SYLLABUS_TEMPLATE,
     FORMAT_SYLLABUS_TEMPLATE,
+    MERGE_SYLLABUS_TEMPLATE,
     JUDGE_SECTION_TEMPLATE,
     FORMAT_JUDGE_TEMPLATE,
     REGION_SELECTION_TEMPLATE,
@@ -65,7 +66,7 @@ def prepare_regulation_query_engine(
     return regulation_query_engine
 
 
-def prepare_regulation_syllabus_pipeline(
+def prepare_regulation_syllabus_pipeline_with_query_engine(
     regulation_query_engine: SubQuestionQueryEngine,
     ask_syllabus_template: str = ASK_SYLLABUS_TEMPLATE,
     format_syllabus_template: str = FORMAT_SYLLABUS_TEMPLATE,
@@ -93,6 +94,44 @@ def prepare_regulation_syllabus_pipeline(
         chain=[
             ask_syllabus_template,
             regulation_query_engine,
+            format_syllabus_template,
+            Settings.llm,
+            syllabus_parser,
+            FnComponent(
+                fn=lambda input: {
+                    section.name.value: section.key_points
+                    for section in input.sections
+                }),
+        ],
+        callback_manager=CallbackManager([token_counter])
+        if token_counter else None,
+        verbose=verbose,
+    )
+
+    return syllabus_pipeline
+
+
+def prepare_regulation_syllabus_pipeline(
+    format_syllabus_template: str = MERGE_SYLLABUS_TEMPLATE,
+    token_counter: Optional[TokenCountingHandler] = None,
+    verbose: bool = False,
+) -> QueryPipeline:
+    """Prepare a pipeline for generating a privacy policy syllabus
+    compliant with regulations
+
+    :param format_syllabus_template: a template for formatting a syllabus
+    :param token_counter: a token counter for counting tokens
+    :param verbose: whether to show verbose output
+    :return: a pipeline for generating a syllabus for regulations
+    """
+
+    syllabus_parser = PydanticOutputParser(Syllabus)
+    format_syllabus_template = PromptTemplate(
+        syllabus_parser.format(format_syllabus_template))
+
+    # create a pipeline
+    syllabus_pipeline = QueryPipeline(
+        chain=[
             format_syllabus_template,
             Settings.llm,
             syllabus_parser,
