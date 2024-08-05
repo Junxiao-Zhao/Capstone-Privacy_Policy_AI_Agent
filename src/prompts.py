@@ -18,6 +18,32 @@ Please rearrange the sections and key points into these sections: \
 FORMAT_SYLLABUS_TEMPLATE = FORMAT_SYLLABUS_TEMPLATE.format(
     section_names=', '.join([each.value for each in SectionNames]))
 
+COMPOSE_SYLLABUS_TEMPLATE = """\
+# {regulation}
+
+should include the following sections:
+{sections}
+
+with these key points:
+{key_points}
+
+
+"""
+
+MERGE_SYLLABUS_TEMPLATE = """\
+Given the privacy policy sections and key points:
+
+{{query_str}}
+
+Please merge the sections and key points from different syllabuses \
+into one syllabus.
+
+Then, please rearrange the sections and key points into these sections: \
+{section_names}, and output with the following JSON format:"""
+
+MERGE_SYLLABUS_TEMPLATE = MERGE_SYLLABUS_TEMPLATE.format(
+    section_names=', '.join([each.value for each in SectionNames]))
+
 GENERATE_PROMPT = """\
 Please generate a {section_name} section of a privacy policy \
 based on these information provided below:
