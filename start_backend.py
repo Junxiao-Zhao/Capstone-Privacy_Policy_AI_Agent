@@ -1,3 +1,4 @@
+import os
 import logging
 import logging.config
 
@@ -10,20 +11,23 @@ from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 
 load_dotenv()
 
-logging.config.fileConfig('./config/logging.cfg')
-set_global_handler(
-    "simple",
-    logger=logging.getLogger('agent'),
-)
+if os.getenv("LOGGING_MODE") == "simple":
+    logging.config.fileConfig('./config/logging.cfg')
+    set_global_handler(
+        "simple",
+        logger=logging.getLogger('agent'),
+    )
+else:
+    set_global_handler(os.getenv("LOGGING_MODE"))
+
+llm = OpenAI(model=os.getenv("OPENAI_MODEL_ID"))
+Settings.llm = llm
+
+tokenizer_fn = tiktoken.encoding_for_model(os.getenv("OPENAI_MODEL_ID")).encode
+token_counter = TokenCountingHandler(tokenizer=tokenizer_fn, verbose=True)
+Settings.callback_manager = CallbackManager([token_counter])
 
 if __name__ == '__main__':
     from src.generation_api import app
-
-    llm = OpenAI(model="gpt-4o")
-    Settings.llm = llm
-
-    tokenizer_fn = tiktoken.encoding_for_model("gpt-4o").encode
-    token_counter = TokenCountingHandler(tokenizer=tokenizer_fn, verbose=True)
-    Settings.callback_manager = CallbackManager([token_counter])
 
     uvicorn.run(app, host='127.0.0.1', port=9999)
