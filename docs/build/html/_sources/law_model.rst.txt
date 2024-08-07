@@ -1,0 +1,7 @@
+law\_model module
+=================
+
+.. automodule:: law_model
+   :members:
+   :undoc-members:
+   :show-inheritance:
