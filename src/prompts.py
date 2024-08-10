@@ -30,6 +30,18 @@ with these key points:
 
 """
 
+QUERY_SYLLABUS_SECTION_TEMPLATE = """\
+What sections should a privacy policy include to \
+be compliant with {regulation}?\
+"""
+
+QUERY_SECTION_KEY_POINTS_TEMPLATE = """\
+Given the sections needed: {sections},
+
+what key points should be covered in each section of a {regulation} \
+compliant privacy policy?
+"""
+
 MERGE_SYLLABUS_TEMPLATE = """\
 Given the privacy policy sections and key points:
 
