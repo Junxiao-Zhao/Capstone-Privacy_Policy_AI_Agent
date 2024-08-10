@@ -11,6 +11,7 @@ from llama_index.core.query_pipeline import (
 )
 from llama_index.core.output_parsers import PydanticOutputParser
 from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
+from llama_index.core.llms.llm import LLM
 from llama_index.readers.web import SimpleWebPageReader
 
 from .formats import (
@@ -27,7 +28,6 @@ from .prompts import (
     FORMAT_JUDGE_TEMPLATE,
     REGION_SELECTION_TEMPLATE,
 )
-from .law_model import HuggingFaceLLMModified
 
 
 def prepare_regulation_query_engine(
@@ -151,12 +151,14 @@ def prepare_regulation_syllabus_pipeline(
 
 def prepare_generate_pipeline(
     generate_template: str,
+    generation_llm: LLM = Settings.llm,
     token_counter: Optional[TokenCountingHandler] = None,
     verbose: bool = False,
 ) -> QueryPipeline:
     """Prepare a pipeline for (re)generating a section of a privacy policy
 
     :param generate_template: a template for (re)generating a section
+    :param generation_llm: a language model for (re)generating a section
     :param token_counter: a token counter for counting tokens
     :param verbose: whether to show verbose output
     :return: a pipeline for (re)generating a section of a privacy policy
@@ -166,7 +168,7 @@ def prepare_generate_pipeline(
     generate_template = PromptTemplate(
         generate_parser.format(generate_template))
     regenerate_pipeline = QueryPipeline(
-        chain=[generate_template, Settings.llm, generate_parser],
+        chain=[generate_template, generation_llm, generate_parser],
         callback_manager=CallbackManager([token_counter])
         if token_counter else None,
         verbose=verbose,
@@ -176,7 +178,7 @@ def prepare_generate_pipeline(
 
 
 def prepare_section_judge_pipeline(
-    law_llm: HuggingFaceLLMModified,
+    law_llm: LLM,
     judge_section_template: str = JUDGE_SECTION_TEMPLATE,
     format_judge_template: str = FORMAT_JUDGE_TEMPLATE,
     token_counter: Optional[TokenCountingHandler] = None,
@@ -200,11 +202,16 @@ def prepare_section_judge_pipeline(
 
     def determine_judge(judges: Judges, section_name: str):
 
-        for judge in judges.judges:
-            if judge.name.value == section_name:
-                return {"pass": False, "suggestions": judge.suggestions}
+        improve_suggestions = ""
 
-        return {"pass": True, "suggestions": ""}
+        for judge in judges.judges:
+            if judge.name.value == section_name and judge.suggestions:
+                improve_suggestions += judge.suggestions + "\n"
+
+        if not improve_suggestions:
+            return {"pass": True, "suggestions": ""}
+
+        return {"pass": False, "suggestions": improve_suggestions}
 
     # create a pipeline
     judge_pipeline = QueryPipeline(
