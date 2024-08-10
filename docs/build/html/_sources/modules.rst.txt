@@ -5,4 +5,3 @@ Capstone-Privacy_Policy_AI_Agent
    :maxdepth: 4
 
    src
-   start_backend

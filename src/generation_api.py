@@ -2,20 +2,29 @@ import os
 import json
 import logging
 import asyncio
+import tempfile
 import functools
 from typing import Dict, List, Any, Callable
 
 import pandas as pd
-from fastapi import FastAPI, UploadFile, HTTPException, Form
-from llama_index.core import StorageContext
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
+from llama_index.core import (
+    StorageContext,
+    SimpleDirectoryReader,
+    SummaryIndex,
+    Document,
+)
 from llama_index.core.memory import VectorMemory
 from llama_index.core.indices import load_index_from_storage
 from llama_index.llms.text_generation_inference import TextGenerationInference
+from llama_parse import LlamaParse
 
 from .prompts import (
     GENERATE_PROMPT,
     REGENERATE_PROMPT,
     COMPOSE_SYLLABUS_TEMPLATE,
+    QUERY_SYLLABUS_SECTION_TEMPLATE,
+    QUERY_SECTION_KEY_POINTS_TEMPLATE,
 )
 from .law_model import prepare_law_llm
 from .pipelines import (
@@ -48,16 +57,23 @@ regenerate_pipeline = prepare_generate_pipeline(REGENERATE_PROMPT,
 judge_pipeline = prepare_section_judge_pipeline(law_llm, verbose=verbose)
 region_selection_pipeline = prepare_region_selection_pipeline(verbose=verbose)
 
-# load regulation memory
+# load regulation memory and pdf parser
 stored_history = StorageContext.from_defaults(
     persist_dir='./data/regulations/vector_memory')
 regulation_memory = VectorMemory(
     vector_index=load_index_from_storage(stored_history),
     retriever_kwargs={"similarity_top_k": 1},
 )
+parser = LlamaParse(result_type="text")
 
 
 def retry_on_exception(retries: int = 5, delay: float = 1.0):
+    """Retry on exception decorator
+
+    :param retries: the number of retries
+    :param delay: the delay between retries
+    :return: a retry decorator
+    """
 
     def decorator(func: Callable):
 
@@ -96,15 +112,21 @@ async def select_regulations(areas: str = Form(...)):
     return sub_links_df.to_dict(orient='records')
 
 
-# TODO: add upload files
 @app.post("/syllabus")
 @retry_on_exception(retries=3, delay=2.0)
-async def get_syllabus(regulations: str = Form(...)) -> Dict[str, List[str]]:
+async def get_syllabus(
+        regulations: str = Form(""),
+        upload_files: List[UploadFile] = File([]),
+) -> Dict[str, List[str]]:
     """Get a privacy policy syllabus
 
     :param regulations: the regulations to comply with
+    :param upload_files: the user uploaded files
     :return: a privacy policy syllabus
     """
+
+    if not regulations and not upload_files:
+        return {}
 
     regulations = map(str.strip, regulations.split(','))
     stored_regulations = set(links_df['regulations'].to_list())
@@ -120,8 +142,57 @@ async def get_syllabus(regulations: str = Form(...)) -> Dict[str, List[str]]:
                 key_points=syllabus_content[1].content,
             )
 
+    if upload_files:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for file in upload_files:
+                file_path = os.path.join(temp_dir, file.filename)
+                with open(file_path, "wb") as temp_file:
+                    temp_file.write(await file.read())
+
+            documents = SimpleDirectoryReader(
+                input_dir=temp_dir,
+                file_extractor={
+                    ".pdf": parser
+                },
+            ).load_data()
+
+        tasks = [
+            get_raw_syllabus_from_document(document) for document in documents
+        ]
+        results = await asyncio.gather(*tasks)
+        query_str += ''.join(results)
+
     syllabus = await syllabus_pipeline.arun(query_str=query_str)
     return syllabus
+
+
+async def get_raw_syllabus_from_document(document: Document) -> str:
+    """Get a privacy policy syllabus from a document
+
+    :param document: the llamaindex document
+    :return: a privacy policy's sections and key points
+    """
+
+    query_engine = SummaryIndex.from_documents([document])\
+        .as_query_engine(response_mode="tree_summarize")
+    file_name = document.metadata['file_name'].split('.')[0]
+
+    sections = await query_engine.aquery(
+        QUERY_SYLLABUS_SECTION_TEMPLATE.format(regulation=file_name))
+
+    key_points = await query_engine.aquery(
+        QUERY_SECTION_KEY_POINTS_TEMPLATE.format(
+            sections=sections.response,
+            regulation=file_name,
+        ))
+
+    query_str = COMPOSE_SYLLABUS_TEMPLATE.format(
+        regulation=file_name,
+        sections=sections.response,
+        key_points=key_points.response,
+    )
+
+    return query_str
 
 
 @app.post("/generate")

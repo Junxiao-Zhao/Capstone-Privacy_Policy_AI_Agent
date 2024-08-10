@@ -4,11 +4,13 @@ import logging.config
 
 import uvicorn
 import tiktoken
+import nest_asyncio
 from dotenv import load_dotenv
 from llama_index.llms.openai import OpenAI
 from llama_index.core import Settings, set_global_handler
 from llama_index.core.callbacks import CallbackManager, TokenCountingHandler
 
+nest_asyncio.apply()
 load_dotenv()
 
 if os.getenv("LOGGING_MODE") == "simple":
