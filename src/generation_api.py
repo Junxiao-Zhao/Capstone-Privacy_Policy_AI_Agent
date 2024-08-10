@@ -51,8 +51,11 @@ app = FastAPI(version=os.getenv("VERSION", "beta"))
 links_df = pd.read_csv('./data/regulations/Region Data Regulation.csv',
                        encoding='utf-8')
 syllabus_pipeline = prepare_regulation_syllabus_pipeline(verbose=verbose)
-generate_pipline = prepare_generate_pipeline(GENERATE_PROMPT, verbose=verbose)
+generate_pipline = prepare_generate_pipeline(GENERATE_PROMPT,
+                                             law_llm,
+                                             verbose=verbose)
 regenerate_pipeline = prepare_generate_pipeline(REGENERATE_PROMPT,
+                                                law_llm,
                                                 verbose=verbose)
 judge_pipeline = prepare_section_judge_pipeline(law_llm, verbose=verbose)
 region_selection_pipeline = prepare_region_selection_pipeline(verbose=verbose)
@@ -232,7 +235,18 @@ async def generate(
     )
 
     if judge['pass']:
-        return {"success": True, "content": section_content.content}
+        return {
+            "success": True,
+            "content": section_content.content,
+            "suggestions": "",
+        }
+
+    if threshold <= 0:
+        return {
+            "success": False,
+            "content": section_content.content,
+            "suggestions": judge['suggestions'],
+        }
 
     regenerate_result = await regenerate(
         section_name=section_name,
@@ -284,10 +298,18 @@ async def regenerate(
         )
 
         if judge['pass']:
-            return {"success": True, "content": regenerate_result.content}
+            return {
+                "success": True,
+                "content": regenerate_result.content,
+                "suggestions": "",
+            }
 
         else:
             suggestions = judge['suggestions']
             section_text = regenerate_result.content
 
-    return {"success": False, "content": regenerate_result.content}
+    return {
+        "success": False,
+        "content": section_text,
+        "suggestions": suggestions,
+    }

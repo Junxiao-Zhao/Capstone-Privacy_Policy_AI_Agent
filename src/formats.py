@@ -42,8 +42,8 @@ class Judge(BaseModel):
 
     suggestions: str = Field(
         ...,
-        title="Suggestions",
-        description="Suggestions for improvement.",
+        title="Suggestions for improvement",
+        description="Leave empty if it's comments instead of suggestions.",
     )
 
 
