@@ -51,11 +51,8 @@ app = FastAPI(version=os.getenv("VERSION", "beta"))
 links_df = pd.read_csv('./data/regulations/Region Data Regulation.csv',
                        encoding='utf-8')
 syllabus_pipeline = prepare_regulation_syllabus_pipeline(verbose=verbose)
-generate_pipline = prepare_generate_pipeline(GENERATE_PROMPT,
-                                             law_llm,
-                                             verbose=verbose)
+generate_pipline = prepare_generate_pipeline(GENERATE_PROMPT, verbose=verbose)
 regenerate_pipeline = prepare_generate_pipeline(REGENERATE_PROMPT,
-                                                law_llm,
                                                 verbose=verbose)
 judge_pipeline = prepare_section_judge_pipeline(law_llm, verbose=verbose)
 region_selection_pipeline = prepare_region_selection_pipeline(verbose=verbose)
@@ -258,6 +255,40 @@ async def generate(
     )
 
     return regenerate_result
+
+
+@app.post("/regenerate")
+async def api_regenerate(
+        section_name: str = Form(...),
+        section_text: str = Form(...),
+        syllabus: str = Form(...),
+        regulations: str = Form(...),
+        suggestions: str = Form(...),
+        threshold: int = Form(3),
+) -> Dict[str, Any]:
+    """
+    Regenerate a section of a privacy policy using the
+    existing `regenerate` function.
+
+    :param section_name: the name of the section
+    :param section_text: the text of the section
+    :param syllabus: the syllabus for generating sections
+    :param regulations: the regulations to comply with
+    :param suggestions: the suggestions for improvement
+    :param threshold: the maximum number of attempts to regenerate
+    :return: success or not and the regenerated section
+    """
+    syllabus_dict = json.loads(syllabus)
+
+    # Call the existing regenerate function directly
+    result = await regenerate(section_name=section_name,
+                              section_text=section_text,
+                              syllabus=syllabus_dict,
+                              regulations=regulations,
+                              suggestions=suggestions,
+                              threshold=threshold)
+
+    return result
 
 
 @retry_on_exception(retries=3, delay=2.0)
