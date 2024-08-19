@@ -83,14 +83,14 @@ def main():
             if st.button('Previous'):
                 save_current_page_data(pages[st.session_state['page']])
                 st.session_state['page'] -= 1
-                st.experimental_rerun()
+                st.rerun()
     with col3:
         if st.session_state['page'] < len(pages) - 1:
             if st.button('Next'):
                 if validate_page(st.session_state['page']):
                     save_current_page_data(pages[st.session_state['page']])
                     st.session_state['page'] += 1
-                    st.experimental_rerun()
+                    st.rerun()
         else:
             if st.button('Submit'):
                 if validate_page(st.session_state['page']):
@@ -99,7 +99,7 @@ def main():
                     st.success('Data saved successfully!')
                     st.session_state['page'] = 0
                     st.session_state['form_data'] = {}
-                    st.experimental_rerun()
+                    st.rerun()
 
 def save_current_page_data(page):
     if page == 'Company Info':
