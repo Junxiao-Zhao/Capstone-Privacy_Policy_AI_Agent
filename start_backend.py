@@ -30,6 +30,6 @@ token_counter = TokenCountingHandler(tokenizer=tokenizer_fn, verbose=True)
 Settings.callback_manager = CallbackManager([token_counter])
 
 if __name__ == '__main__':
-    from src.generation_api import app
+    from backend.generation_api import app
 
     uvicorn.run(app, host='127.0.0.1', port=9999)
