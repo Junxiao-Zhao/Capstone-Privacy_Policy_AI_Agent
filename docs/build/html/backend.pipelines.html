@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>backend.pipelines module &#8212; Privacy Policy AI Agent 1.0.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=c058f7c8" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=8d563738"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="backend.prompts module" href="backend.prompts.html" />
+    <link rel="prev" title="backend.law_model module" href="backend.law_model.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-backend.pipelines">
+<span id="backend-pipelines-module"></span><h1>backend.pipelines module<a class="headerlink" href="#module-backend.pipelines" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="backend.pipelines.prepare_generate_pipeline">
+<span class="sig-prename descclassname"><span class="pre">backend.pipelines.</span></span><span class="sig-name descname"><span class="pre">prepare_generate_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">generate_template:</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generation_llm:</span> <span class="pre">~llama_index.core.llms.llm.LLM</span> <span class="pre">=</span> <span class="pre">OpenAI(callback_manager=&lt;llama_index.core.callbacks.base.CallbackManager</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system_prompt=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">messages_to_prompt=&lt;function</span> <span class="pre">messages_to_prompt&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">completion_to_prompt=&lt;function</span> <span class="pre">default_completion_to_prompt&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_parser=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pydantic_program_mode=&lt;PydanticProgramMode.DEFAULT:</span> <span class="pre">'default'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_wrapper_prompt=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model='gpt-3.5-turbo'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_tokens=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logprobs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_logprobs=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_kwargs={}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_retries=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout=60.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_headers=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reuse_client=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key='sk-proj-...'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_base='https://api.openai.com/v1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_version='')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_counter:</span> <span class="pre">~llama_index.core.callbacks.token_counting.TokenCountingHandler</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">QueryPipeline</span></span></span><a class="headerlink" href="#backend.pipelines.prepare_generate_pipeline" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare a pipeline for (re)generating a section of a privacy policy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>generate_template</strong> – a template for (re)generating a section</p></li>
+<li><p><strong>generation_llm</strong> – a language model for (re)generating a section</p></li>
+<li><p><strong>token_counter</strong> – a token counter for counting tokens</p></li>
+<li><p><strong>verbose</strong> – whether to show verbose output</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a pipeline for (re)generating a section of a privacy policy</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="backend.pipelines.prepare_region_selection_pipeline">
+<span class="sig-prename descclassname"><span class="pre">backend.pipelines.</span></span><span class="sig-name descname"><span class="pre">prepare_region_selection_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">region_selection_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&quot;\nAssistant:</span> <span class="pre">I</span> <span class="pre">can</span> <span class="pre">help</span> <span class="pre">determine</span> <span class="pre">which</span> <span class="pre">region</span> <span class="pre">a</span> <span class="pre">user</span> <span class="pre">input</span> <span class="pre">belongs</span> <span class="pre">to.\nThe</span> <span class="pre">regions</span> <span class="pre">are:</span> <span class="pre">United</span> <span class="pre">States,</span> <span class="pre">California,</span> <span class="pre">European</span> <span class="pre">Union,</span> <span class="pre">United</span> <span class="pre">Kingdom,</span> <span class="pre">Canada,</span> <span class="pre">Australia,</span> <span class="pre">India,</span> <span class="pre">Singapore,</span> <span class="pre">Japan,</span> <span class="pre">South</span> <span class="pre">Korea,</span> <span class="pre">Brazil,</span> <span class="pre">South</span> <span class="pre">Africa,</span> <span class="pre">Other.</span> <span class="pre">Make</span> <span class="pre">sure</span> <span class="pre">to</span> <span class="pre">include</span> <span class="pre">all</span> <span class="pre">options.\n\nExamples:\nUser:</span> <span class="pre">los</span> <span class="pre">angeles\nAssistant:</span> <span class="pre">California,</span> <span class="pre">United</span> <span class="pre">States\nUser:</span> <span class="pre">hong</span> <span class="pre">kong\nAssistant:</span> <span class="pre">Other\nUser:</span> <span class="pre">berlin\nAssistant:</span> <span class="pre">European</span> <span class="pre">Union\nUser:</span> <span class="pre">toronto\nAssistant:</span> <span class="pre">Canada\nNow,</span> <span class="pre">let's</span> <span class="pre">try</span> <span class="pre">with</span> <span class="pre">your</span> <span class="pre">input.\nUser:</span> <span class="pre">{user_input}\nAssistant:</span> <span class="pre">The</span> <span class="pre">regions</span> <span class="pre">that</span> <span class="pre">the</span> <span class="pre">user</span> <span class="pre">input</span> <span class="pre">belongs</span> <span class="pre">to</span> <span class="pre">are:\n&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_counter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TokenCountingHandler</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">QueryPipeline</span></span></span><a class="headerlink" href="#backend.pipelines.prepare_region_selection_pipeline" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare a pipeline for selecting regions based on user input</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>region_selection_template</strong> – a template for selecting regions</p></li>
+<li><p><strong>token_counter</strong> – a token counter for counting tokens</p></li>
+<li><p><strong>verbose</strong> – whether to show verbose output</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a pipeline for selecting regions</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="backend.pipelines.prepare_regulation_query_engine">
+<span class="sig-prename descclassname"><span class="pre">backend.pipelines.</span></span><span class="sig-name descname"><span class="pre">prepare_regulation_query_engine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">links_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">SubQuestionQueryEngine</span></span></span><a class="headerlink" href="#backend.pipelines.prepare_regulation_query_engine" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare a query engine for regulations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>links_df</strong> – a DataFrame with columns ‘regulations’ and ‘links’</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a query engine for regulations</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="backend.pipelines.prepare_regulation_syllabus_pipeline">
+<span class="sig-prename descclassname"><span class="pre">backend.pipelines.</span></span><span class="sig-name descname"><span class="pre">prepare_regulation_syllabus_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format_syllabus_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Given</span> <span class="pre">the</span> <span class="pre">privacy</span> <span class="pre">policy</span> <span class="pre">sections</span> <span class="pre">and</span> <span class="pre">key</span> <span class="pre">points:\n\n{query_str}\n\nPlease</span> <span class="pre">merge</span> <span class="pre">the</span> <span class="pre">sections</span> <span class="pre">and</span> <span class="pre">key</span> <span class="pre">points</span> <span class="pre">from</span> <span class="pre">different</span> <span class="pre">syllabuses</span> <span class="pre">into</span> <span class="pre">one</span> <span class="pre">syllabus.\n\nThen,</span> <span class="pre">please</span> <span class="pre">rearrange</span> <span class="pre">the</span> <span class="pre">sections</span> <span class="pre">and</span> <span class="pre">key</span> <span class="pre">points</span> <span class="pre">into</span> <span class="pre">these</span> <span class="pre">sections:</span> <span class="pre">Introduction,</span> <span class="pre">Data</span> <span class="pre">Controller</span> <span class="pre">Information,</span> <span class="pre">Data</span> <span class="pre">Collection</span> <span class="pre">and</span> <span class="pre">Usage,</span> <span class="pre">Data</span> <span class="pre">Subject</span> <span class="pre">Rights,</span> <span class="pre">Data</span> <span class="pre">Sharing</span> <span class="pre">and</span> <span class="pre">Transfers,</span> <span class="pre">Data</span> <span class="pre">Retention,</span> <span class="pre">Disclosure</span> <span class="pre">of</span> <span class="pre">Personal</span> <span class="pre">Information,</span> <span class="pre">Security</span> <span class="pre">Measures,</span> <span class="pre">Automated</span> <span class="pre">Decision-Making</span> <span class="pre">and</span> <span class="pre">Profiling,</span> <span class="pre">Cookies</span> <span class="pre">and</span> <span class="pre">Tracking</span> <span class="pre">Technologies,</span> <span class="pre">Changes</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">Privacy</span> <span class="pre">Policy,</span> <span class="pre">Contact</span> <span class="pre">Information,</span> <span class="pre">and</span> <span class="pre">output</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">following</span> <span class="pre">JSON</span> <span class="pre">format:'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_counter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TokenCountingHandler</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">QueryPipeline</span></span></span><a class="headerlink" href="#backend.pipelines.prepare_regulation_syllabus_pipeline" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare a pipeline for generating a privacy policy syllabus
+compliant with regulations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>format_syllabus_template</strong> – a template for formatting a syllabus</p></li>
+<li><p><strong>token_counter</strong> – a token counter for counting tokens</p></li>
+<li><p><strong>verbose</strong> – whether to show verbose output</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a pipeline for generating a syllabus for regulations</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="backend.pipelines.prepare_regulation_syllabus_pipeline_with_query_engine">
+<span class="sig-prename descclassname"><span class="pre">backend.pipelines.</span></span><span class="sig-name descname"><span class="pre">prepare_regulation_syllabus_pipeline_with_query_engine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">regulation_query_engine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">SubQuestionQueryEngine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ask_syllabus_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'I</span> <span class="pre">want</span> <span class="pre">to</span> <span class="pre">write</span> <span class="pre">a</span> <span class="pre">privacy</span> <span class="pre">policy,</span> <span class="pre">which</span> <span class="pre">should</span> <span class="pre">be</span> <span class="pre">{regulations}</span> <span class="pre">compliant.\nWhat</span> <span class="pre">sections</span> <span class="pre">should</span> <span class="pre">it</span> <span class="pre">include?</span> <span class="pre">And</span> <span class="pre">for</span> <span class="pre">each</span> <span class="pre">section,</span> <span class="pre">what</span> <span class="pre">key</span> <span class="pre">points</span> <span class="pre">should</span> <span class="pre">be</span> <span class="pre">covered?\nList</span> <span class="pre">them</span> <span class="pre">as</span> <span class="pre">bullet</span> <span class="pre">points.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format_syllabus_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'Given</span> <span class="pre">the</span> <span class="pre">privacy</span> <span class="pre">policy</span> <span class="pre">sections</span> <span class="pre">and</span> <span class="pre">key</span> <span class="pre">points:\n\n{query_str}\n\nDO</span> <span class="pre">NOT</span> <span class="pre">modify</span> <span class="pre">the</span> <span class="pre">key</span> <span class="pre">points!!!\nPlease</span> <span class="pre">rearrange</span> <span class="pre">the</span> <span class="pre">sections</span> <span class="pre">and</span> <span class="pre">key</span> <span class="pre">points</span> <span class="pre">into</span> <span class="pre">these</span> <span class="pre">sections:</span> <span class="pre">Introduction,</span> <span class="pre">Data</span> <span class="pre">Controller</span> <span class="pre">Information,</span> <span class="pre">Data</span> <span class="pre">Collection</span> <span class="pre">and</span> <span class="pre">Usage,</span> <span class="pre">Data</span> <span class="pre">Subject</span> <span class="pre">Rights,</span> <span class="pre">Data</span> <span class="pre">Sharing</span> <span class="pre">and</span> <span class="pre">Transfers,</span> <span class="pre">Data</span> <span class="pre">Retention,</span> <span class="pre">Disclosure</span> <span class="pre">of</span> <span class="pre">Personal</span> <span class="pre">Information,</span> <span class="pre">Security</span> <span class="pre">Measures,</span> <span class="pre">Automated</span> <span class="pre">Decision-Making</span> <span class="pre">and</span> <span class="pre">Profiling,</span> <span class="pre">Cookies</span> <span class="pre">and</span> <span class="pre">Tracking</span> <span class="pre">Technologies,</span> <span class="pre">Changes</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">Privacy</span> <span class="pre">Policy,</span> <span class="pre">Contact</span> <span class="pre">Information,</span> <span class="pre">and</span> <span class="pre">output</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">following</span> <span class="pre">JSON</span> <span class="pre">format:'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_counter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TokenCountingHandler</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">QueryPipeline</span></span></span><a class="headerlink" href="#backend.pipelines.prepare_regulation_syllabus_pipeline_with_query_engine" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare a pipeline for generating a privacy policy syllabus
+compliant with regulations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>regulation_query_engine</strong> – a query engine for regulations</p></li>
+<li><p><strong>ask_syllabus_template</strong> – a template for asking a syllabus</p></li>
+<li><p><strong>format_syllabus_template</strong> – a template for formatting a syllabus</p></li>
+<li><p><strong>token_counter</strong> – a token counter for counting tokens</p></li>
+<li><p><strong>verbose</strong> – whether to show verbose output</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a pipeline for generating a syllabus for regulations</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="backend.pipelines.prepare_section_judge_pipeline">
+<span class="sig-prename descclassname"><span class="pre">backend.pipelines.</span></span><span class="sig-name descname"><span class="pre">prepare_section_judge_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">law_llm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LLM</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">judge_section_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'This</span> <span class="pre">{section_name}</span> <span class="pre">is</span> <span class="pre">a</span> <span class="pre">section</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">privacy</span> <span class="pre">policy:\n\n{section_text}\n\nPlease</span> <span class="pre">judge</span> <span class="pre">whether</span> <span class="pre">this</span> <span class="pre">section</span> <span class="pre">is</span> <span class="pre">compliant</span> <span class="pre">with</span> <span class="pre">the</span> <span class="pre">{regulations}</span> <span class="pre">regulations.</span> <span class="pre">If</span> <span class="pre">not,</span> <span class="pre">please</span> <span class="pre">provide</span> <span class="pre">suggestions</span> <span class="pre">on</span> <span class="pre">how</span> <span class="pre">to</span> <span class="pre">improve</span> <span class="pre">it.\nNOTE</span> <span class="pre">THAT</span> <span class="pre">this</span> <span class="pre">is</span> <span class="pre">just</span> <span class="pre">one</span> <span class="pre">section,</span> <span class="pre">not</span> <span class="pre">the</span> <span class="pre">whole</span> <span class="pre">privacy</span> <span class="pre">policy.</span> <span class="pre">Only</span> <span class="pre">judge</span> <span class="pre">this</span> <span class="pre">section</span> <span class="pre">in</span> <span class="pre">isolation.\n'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">format_judge_template</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&quot;Given</span> <span class="pre">the</span> <span class="pre">comments</span> <span class="pre">from</span> <span class="pre">a</span> <span class="pre">legal</span> <span class="pre">expert:\n\n{query_str}\n\nPlease</span> <span class="pre">extract</span> <span class="pre">the</span> <span class="pre">legal</span> <span class="pre">expert's</span> <span class="pre">suggestions</span> <span class="pre">on</span> <span class="pre">how</span> <span class="pre">to</span> <span class="pre">improve</span> <span class="pre">the</span> <span class="pre">sections</span> <span class="pre">in</span> <span class="pre">a</span> <span class="pre">privacy</span> <span class="pre">policy.\n&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_counter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">TokenCountingHandler</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">QueryPipeline</span></span></span><a class="headerlink" href="#backend.pipelines.prepare_section_judge_pipeline" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare a pipeline for judging a section of a privacy policy</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>law_llm</strong> – a law LLM to judge a section</p></li>
+<li><p><strong>judge_section_template</strong> – a template for judging a section</p></li>
+<li><p><strong>format_judge_template</strong> – a template for formatting a judge</p></li>
+<li><p><strong>token_counter</strong> – a token counter for counting tokens</p></li>
+<li><p><strong>verbose</strong> – whether to show verbose output</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>a pipeline for judging a section of a privacy policy</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Privacy Policy AI Agent</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Capstone-Privacy_Policy_AI_Agent</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="backend.html">backend package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">Capstone-Privacy_Policy_AI_Agent</a><ul>
+  <li><a href="backend.html">backend package</a><ul>
+      <li>Previous: <a href="backend.law_model.html" title="previous chapter">backend.law_model module</a></li>
+      <li>Next: <a href="backend.prompts.html" title="next chapter">backend.prompts module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Junxiao Zhao, Jiangsiyao Sun, Peixi Liu, Zhipeng Chen, Shaofei Huang.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.0.2</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/backend.pipelines.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
