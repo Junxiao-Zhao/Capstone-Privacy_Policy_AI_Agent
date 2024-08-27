@@ -6,6 +6,8 @@ VERSION = '1.0.0.Beta'
 SKIP_VALIDATION = False
 DISPLAY_TEMPLATE = False
 
+API_URL = "http://localhost:9999"
+
 if VERSION[-1] == 'a':
     SKIP_VALIDATION = True
     DISPLAY_TEMPLATE = True
@@ -189,4 +191,35 @@ COLLECTION_METHODS_DESCRIPTIONS = {
     'Directly from you': 'When you provide it to us directly through forms, account creation, or communications.',
     'Automatically': 'When you use our services, through cookies, log files, and similar technologies.',
     'From Third Parties': 'When you link your account with third-party services or access our services through third-party platforms.'
+}
+
+SECTION_NAMES = {
+    'SEC1' : 'Introduction',
+    'SEC2' : "Data Controller Information",
+    'SEC3' : "Data Collection and Usage",
+    'SEC4' : "Data Subject Rights",
+    'SEC5' : "Data Sharing and Transfers",
+    'SEC6' : "Data Retention",
+    'SEC7' : "Disclosure of Personal Information",
+    'SEC8' : "Security Measures",
+    'SEC9' : "Automated Decision-Making and Profiling",
+    'SEC10' : "Cookies and Tracking Technologies",
+    'SEC11' : "Changes to the Privacy Policy",
+    'SEC12' : "Contact Information"
+}
+
+
+SECTION_REQ = {
+    'SEC1' : [],
+    'SEC2' : ['company_name', 'address'],
+    'SEC3' : ['data_types', 'collection_methods', 'usage_purposes', 'legal_basis'],
+    'SEC4' : ['user_rights', 'collect_child_data', 'child_protection_measures'],
+    'SEC5' : ['sharing_partners', 'international_transfer', 'transfer_measures'],
+    'SEC6' : ['retention_period'],
+    'SEC7' : [],
+    'SEC8' : ['protection_measures'],
+    'SEC9' : [],
+    'SEC10' : ['use_cookies'],
+    'SEC11' : [],
+    'SEC12' : ['contact_email', 'dispute_resolution']
 }
