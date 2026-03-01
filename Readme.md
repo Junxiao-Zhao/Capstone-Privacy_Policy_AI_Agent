@@ -16,3 +16,5 @@ docker start capstone-privacy_policy_ai_agent-text-generation-inference-1
 streamlit run start_frontend.py
 python start_backend.py
 ```
+
+helloword
